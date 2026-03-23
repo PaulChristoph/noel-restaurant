@@ -32,10 +32,13 @@ async function bookAppointment({ guest_name, guest_phone, date_time, guests, not
       .catch(err => console.error('[SMS] Fehler:', err.message));
   }
 
+  // TTS-freundliche Nummer: "NOEL-1234" → "N O E L, 1 2 3 4"
+  const idSpoken = confirmationId.replace('NOEL-', '').split('').join(' ');
+
   return {
     success: true,
     confirmation_id: confirmationId,
-    confirmation_message: `Perfekt! Ich habe Ihren Tisch reserviert. ${guests} ${guests === 1 ? 'Person' : 'Personen'} am ${dateFormatted} um ${timeFormatted} Uhr. Ihre Reservierungsnummer lautet ${confirmationId}.${phone ? ' Sie erhalten gleich eine Bestätigungs-SMS.' : ''} Wir freuen uns auf Ihren Besuch im NOEL!`,
+    confirmation_message: `Perfekt! Ihr Tisch ist reserviert. ${guests} ${guests === 1 ? 'Person' : 'Personen'} am ${dateFormatted} um ${timeFormatted} Uhr.${phone ? ' Sie erhalten gleich eine Bestätigungs-SMS mit allen Details.' : ` Ihre Buchungsnummer lautet N O E L ${idSpoken}.`} Wir freuen uns auf Ihren Besuch!`,
   };
 }
 
