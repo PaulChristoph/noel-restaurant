@@ -5,6 +5,12 @@ async function checkAvailability({ date, time, guests }) {
     return { available: false, message: 'Bitte nennen Sie Datum und Uhrzeit für die Reservierung.' };
   }
 
+  // Vergangene Zeiten ablehnen
+  const requestedDateTime = new Date(`${date}T${time}:00`);
+  if (requestedDateTime < new Date()) {
+    return { available: false, message: 'Dieser Zeitpunkt liegt in der Vergangenheit. Bitte wählen Sie einen zukünftigen Termin.' };
+  }
+
   const result = await checkTableAvailability(date, time);
 
   return {

@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
-const checkAvailability = require('../functions/checkAvailability');
-const bookAppointment   = require('../functions/bookAppointment');
-const answerFAQ         = require('../functions/answerFAQ');
+const checkAvailability   = require('../functions/checkAvailability');
+const bookAppointment     = require('../functions/bookAppointment');
+const answerFAQ           = require('../functions/answerFAQ');
+const getCurrentDatetime  = require('../functions/getCurrentDatetime');
 
 /**
  * POST /retell/function-call
@@ -30,6 +31,10 @@ router.post('/function-call', async (req, res) => {
 
       case 'answer_faq':
         result = answerFAQ(parameters);
+        break;
+
+      case 'get_current_datetime':
+        result = getCurrentDatetime();
         break;
 
       default:
