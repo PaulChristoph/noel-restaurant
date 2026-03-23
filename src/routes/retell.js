@@ -1,0 +1,53 @@
+const express = require('express');
+const router = express.Router();
+
+const checkAvailability = require('../functions/checkAvailability');
+const bookAppointment   = require('../functions/bookAppointment');
+const answerFAQ         = require('../functions/answerFAQ');
+
+/**
+ * POST /retell/function-call
+ * Retell AI ruft diesen Endpoint auf wenn Sofia eine Funktion ausführen soll.
+ */
+router.post('/function-call', async (req, res) => {
+  const name       = req.body.name || req.body.function_name;
+  const parameters = req.body.args || req.body.parameters || {};
+  const call_id    = req.body.call?.call_id || req.body.call_id;
+
+  console.log(`[Retell] Funktion: ${name} | Call: ${call_id}`);
+
+  try {
+    let result;
+
+    switch (name) {
+      case 'check_availability':
+        result = await checkAvailability(parameters);
+        break;
+
+      case 'book_appointment':
+        result = await bookAppointment(parameters, call_id);
+        break;
+
+      case 'answer_faq':
+        result = answerFAQ(parameters);
+        break;
+
+      default:
+        console.warn(`[Retell] Unbekannte Funktion: ${name}`);
+        result = { error: `Unbekannte Funktion: ${name}` };
+    }
+
+    return res.status(200).json({ result });
+
+  } catch (err) {
+    console.error(`[Retell] Fehler bei ${name}:`, err.message);
+    return res.status(200).json({
+      result: {
+        error: true,
+        message: 'Es ist ein technischer Fehler aufgetreten. Bitte rufen Sie uns direkt unter 04105 676 33 02 an.',
+      },
+    });
+  }
+});
+
+module.exports = router;

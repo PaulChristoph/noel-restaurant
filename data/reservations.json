@@ -1,0 +1,14 @@
+[
+  {
+    "id": "res-1774287905895",
+    "confirmationId": "NOEL-8742",
+    "guestName": "Max Mustermann",
+    "guestPhone": "",
+    "dateTime": "2026-03-26T19:00",
+    "guests": 4,
+    "notes": "Geburtstag, bitte Fensterplatz",
+    "createdAt": "2026-03-23T17:45:05.896Z",
+    "reviewToken": "e0d587fe253313c6af6fbddc",
+    "reviewSent": false
+  }
+]
