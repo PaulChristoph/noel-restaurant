@@ -5,6 +5,7 @@ const checkAvailability   = require('../functions/checkAvailability');
 const bookAppointment     = require('../functions/bookAppointment');
 const answerFAQ           = require('../functions/answerFAQ');
 const getCurrentDatetime  = require('../functions/getCurrentDatetime');
+const getRecommendations  = require('../functions/getRecommendations');
 
 /**
  * POST /retell/function-call
@@ -35,6 +36,10 @@ router.post('/function-call', async (req, res) => {
 
       case 'get_current_datetime':
         result = getCurrentDatetime();
+        break;
+
+      case 'get_recommendations':
+        result = getRecommendations(parameters);
         break;
 
       default:
