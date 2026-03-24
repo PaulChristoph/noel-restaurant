@@ -165,8 +165,9 @@ async function createReservation(guestName, guestPhone, dateTime, guests, notes)
  */
 function cancelReservation(confirmationId) {
   if (!confirmationId) return false;
+  const norm = confirmationId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
   const reservations = loadDB();
-  const idx = reservations.findIndex(r => r.confirmationId === confirmationId.toUpperCase());
+  const idx = reservations.findIndex(r => r.confirmationId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase() === norm);
   if (idx === -1) return false;
   reservations[idx].status = 'cancelled';
   reservations[idx].cancelledAt = new Date().toISOString();
@@ -198,7 +199,8 @@ function findReservationByPhone(phone) {
  */
 function findReservationById(confirmationId) {
   if (!confirmationId) return null;
-  return loadDB().find(r => r.confirmationId === confirmationId.toUpperCase()) || null;
+  const norm = confirmationId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  return loadDB().find(r => r.confirmationId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase() === norm) || null;
 }
 
 module.exports = {

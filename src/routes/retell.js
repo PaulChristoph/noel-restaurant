@@ -49,7 +49,7 @@ router.post('/function-call', async (req, res) => {
         break;
 
       case 'cancel_appointment':
-        result = await cancelAppointment(parameters);
+        result = await cancelAppointment(parameters, call_id, from_number);
         break;
 
       case 'answer_faq':

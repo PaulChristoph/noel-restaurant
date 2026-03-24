@@ -139,7 +139,12 @@ async function findReservationsInSheets({ confirmationId, guestName, phone } = {
     if (status === 'Storniert ✗') continue;
 
     let match = false;
-    if (confirmationId && rowId && rowId.toUpperCase() === confirmationId.toUpperCase()) match = true;
+    if (confirmationId && rowId) {
+      // Exakter Match oder normalisiert (MSTR-1133 == "MSTR 1133" == "M S T R 1133")
+      const norm1 = rowId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      const norm2 = confirmationId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      if (norm1 === norm2) match = true;
+    }
     if (!match && guestName && name && name.toLowerCase().includes(guestName.toLowerCase())) match = true;
     if (!match && phone && rowPhone && rowPhone !== '—') {
       const d1 = phone.replace(/\D/g, '');

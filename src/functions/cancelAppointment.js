@@ -1,42 +1,65 @@
-const { cancelReservation, findReservationById, findReservationByName } = require('../services/mockCalendar');
+const { cancelReservation, findReservationById, findReservationByName, findReservationByPhone } = require('../services/mockCalendar');
 const { cancelReservationInSheets, findReservationsInSheets } = require('../services/googleSheets');
+const { getCallerPhone } = require('../services/retellCall');
 
 /**
  * Storniert eine bestehende Reservierung.
  * Wird aufgerufen bei Stornierung oder vor einer Umbuchung.
  */
-async function cancelAppointment({ confirmation_id, guest_name }) {
+async function cancelAppointment({ confirmation_id, guest_name }, callId, fromNumber) {
   try {
     let reservation = null;
 
+    // 1. JSON-Suche per ID (normalisierter Match)
     if (confirmation_id) {
       reservation = findReservationById(confirmation_id);
-    } else if (guest_name) {
+    }
+
+    // 2. JSON-Suche per Name
+    if (!reservation && guest_name) {
       const results = findReservationByName(guest_name);
-      // Nächste zukünftige Buchung nehmen
       const now = new Date();
       reservation = results
         .filter(r => new Date(r.dateTime) > now && r.status !== 'cancelled')
         .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))[0] || null;
     }
 
-    // Fallback: Google Sheets suchen (JSON nach Railway-Redeploy leer oder anderer Instance)
+    // 3. JSON-Suche per Anrufernummer
+    if (!reservation) {
+      const callerPhone = fromNumber || (callId ? await getCallerPhone(callId) : null);
+      if (callerPhone) {
+        const results = findReservationByPhone(callerPhone);
+        const now = new Date();
+        reservation = results
+          .filter(r => new Date(r.dateTime) > now && r.status !== 'cancelled')
+          .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))[0] || null;
+      }
+    }
+
+    // 4. Sheets-Fallback: sucht per ID, Name und Telefon
     if (!reservation) {
       try {
-        const sheetsResults = await findReservationsInSheets({ confirmationId: confirmation_id, guestName: guest_name });
+        const callerPhone = fromNumber || (callId ? await getCallerPhone(callId) : null);
+        console.log(`[Cancel] Sheets-Fallback: ID="${confirmation_id}" Name="${guest_name}" Phone="${callerPhone}"`);
+        const sheetsResults = await findReservationsInSheets({
+          confirmationId: confirmation_id,
+          guestName: guest_name,
+          phone: callerPhone,
+        });
         if (sheetsResults.length > 0) {
           const r = sheetsResults[0];
           await cancelReservationInSheets(r.confirmationId);
           const d = new Date(r.dateTime);
           const date = d.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
           const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-          console.log(`[Cancel] Sheets-Fallback: ${r.confirmationId} storniert`);
+          console.log(`[Cancel] Sheets-Fallback Erfolg: ${r.confirmationId} storniert`);
           return {
             success: true,
             cancelled_id: r.confirmationId,
             message: `Ihre Reservierung ${r.confirmationId} (${date} um ${time} Uhr) wurde erfolgreich storniert.`,
           };
         }
+        console.log(`[Cancel] Sheets-Fallback: nichts gefunden`);
       } catch (err) {
         console.error('[Cancel] Sheets-Fallback Fehler:', err.message);
       }
@@ -53,7 +76,7 @@ async function cancelAppointment({ confirmation_id, guest_name }) {
       };
     }
 
-    // Lokal stornieren
+    // JSON stornieren
     const ok = cancelReservation(reservation.confirmationId);
     if (!ok) {
       return { success: false, message: 'Stornierung leider nicht möglich. Bitte rufen Sie uns direkt an.' };
