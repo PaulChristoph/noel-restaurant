@@ -155,4 +155,34 @@ async function createReservation(guestName, guestPhone, dateTime, guests, notes)
   return { id, confirmationId, startTime: dateTime };
 }
 
-module.exports = { checkTableAvailability, createReservation };
+/**
+ * Sucht Reservierungen anhand des Gästnamens (case-insensitive, Teilstring).
+ */
+function findReservationByName(name) {
+  const q = name.toLowerCase().trim();
+  return loadDB().filter(r => r.guestName.toLowerCase().includes(q));
+}
+
+/**
+ * Sucht Reservierungen anhand der Telefonnummer (nur Ziffern-Vergleich).
+ */
+function findReservationByPhone(phone) {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length < 6) return [];
+  return loadDB().filter(r => r.guestPhone.replace(/\D/g, '').includes(digits));
+}
+
+/**
+ * Sucht eine Reservierung anhand der Buchungs-ID (z.B. "MSTR-4821").
+ */
+function findReservationById(confirmationId) {
+  return loadDB().find(r => r.confirmationId === confirmationId.toUpperCase()) || null;
+}
+
+module.exports = {
+  checkTableAvailability,
+  createReservation,
+  findReservationByName,
+  findReservationByPhone,
+  findReservationById,
+};

@@ -4,6 +4,7 @@ const router = express.Router();
 const checkAvailability   = require('../functions/checkAvailability');
 const bookAppointment     = require('../functions/bookAppointment');
 const sendConfirmation    = require('../functions/sendConfirmation');
+const lookupReservation   = require('../functions/lookupReservation');
 const answerFAQ           = require('../functions/answerFAQ');
 const getCurrentDatetime  = require('../functions/getCurrentDatetime');
 const getRecommendations  = require('../functions/getRecommendations');
@@ -33,6 +34,10 @@ router.post('/function-call', async (req, res) => {
 
       case 'send_confirmation':
         result = await sendConfirmation(parameters);
+        break;
+
+      case 'lookup_reservation':
+        result = await lookupReservation(parameters, call_id);
         break;
 
       case 'answer_faq':
