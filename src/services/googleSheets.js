@@ -115,4 +115,58 @@ async function cancelReservationInSheets(confirmationId) {
   console.log(`[Sheets] ${confirmationId} als storniert markiert`);
 }
 
-module.exports = { appendReservation, cancelReservationInSheets };
+/**
+ * Sucht Reservierungen in Google Sheets als Fallback (JSON nach Railway-Redeploy leer).
+ * Suche per Buchungs-ID, Name oder Telefon.
+ */
+async function findReservationsInSheets({ confirmationId, guestName, phone } = {}) {
+  const auth = getAuth();
+  if (!auth) return [];
+  const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
+  if (!spreadsheetId) return [];
+
+  const sheets = google.sheets({ version: 'v4', auth });
+  const res = await sheets.spreadsheets.values.get({ spreadsheetId, range: 'A:H' });
+  const rows = res.data.values || [];
+
+  const results = [];
+  // Zeile 0 ist Header — ab Zeile 1
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || row.length < 5) continue;
+    const [rowId, datePart, timeStr, personsStr, name, rowPhone, , status] = row;
+    if (status === 'Storniert ✗') continue;
+
+    let match = false;
+    if (confirmationId && rowId && rowId.toUpperCase() === confirmationId.toUpperCase()) match = true;
+    if (!match && guestName && name && name.toLowerCase().includes(guestName.toLowerCase())) match = true;
+    if (!match && phone && rowPhone && rowPhone !== '—') {
+      const d1 = phone.replace(/\D/g, '');
+      const d2 = rowPhone.replace(/\D/g, '');
+      if (d1.length >= 6 && (d1.includes(d2.slice(-8)) || d2.includes(d1.slice(-8)))) match = true;
+    }
+
+    if (match) {
+      // Datum und Zeit zurück in ISO konvertieren: "30.03.2025" + "18:00 Uhr"
+      const parts = datePart.split('.');
+      const timeClean = timeStr.replace(' Uhr', '');
+      const timeParts = timeClean.split(':');
+      const dt = new Date(
+        parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]),
+        parseInt(timeParts[0]), parseInt(timeParts[1])
+      );
+      results.push({
+        confirmationId: rowId,
+        guestName: name,
+        guestPhone: rowPhone !== '—' ? rowPhone : '',
+        dateTime: dt.toISOString(),
+        guests: parseInt(personsStr) || 1,
+        status: 'confirmed',
+      });
+    }
+  }
+  console.log(`[Sheets] findReservationsInSheets: ${results.length} Treffer`);
+  return results;
+}
+
+module.exports = { appendReservation, cancelReservationInSheets, findReservationsInSheets };

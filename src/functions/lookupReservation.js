@@ -4,6 +4,7 @@ const {
   findReservationById,
 } = require('../services/mockCalendar');
 const { getCallerPhone } = require('../services/retellCall');
+const { findReservationsInSheets } = require('../services/googleSheets');
 
 /**
  * Sucht eine bestehende Reservierung — per Name, Buchungs-ID oder Anrufernummer.
@@ -27,6 +28,21 @@ async function lookupReservation({ guest_name, confirmation_id }, callId, fromNu
     const callerPhone = fromNumber || (callId ? await getCallerPhone(callId) : null);
     if (callerPhone) {
       results = findReservationByPhone(callerPhone);
+    }
+  }
+
+  // 4. Fallback: Google Sheets (JSON nach Railway-Redeploy leer)
+  if (results.length === 0) {
+    try {
+      const callerPhoneForSheets = fromNumber || (callId ? await getCallerPhone(callId) : null);
+      const sheetsResults = await findReservationsInSheets({
+        confirmationId: confirmation_id,
+        guestName: guest_name,
+        phone: callerPhoneForSheets,
+      });
+      if (sheetsResults.length > 0) results = sheetsResults;
+    } catch (err) {
+      console.error('[Lookup] Sheets-Fallback Fehler:', err.message);
     }
   }
 

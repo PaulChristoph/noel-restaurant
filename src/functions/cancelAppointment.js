@@ -1,5 +1,5 @@
 const { cancelReservation, findReservationById, findReservationByName } = require('../services/mockCalendar');
-const { cancelReservationInSheets } = require('../services/googleSheets');
+const { cancelReservationInSheets, findReservationsInSheets } = require('../services/googleSheets');
 
 /**
  * Storniert eine bestehende Reservierung.
@@ -19,7 +19,26 @@ async function cancelAppointment({ confirmation_id, guest_name }) {
       .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))[0] || null;
   }
 
+  // Fallback: Google Sheets suchen (JSON nach Railway-Redeploy leer)
   if (!reservation) {
+    try {
+      const sheetsResults = await findReservationsInSheets({ confirmationId: confirmation_id, guestName: guest_name });
+      if (sheetsResults.length > 0) {
+        const r = sheetsResults[0];
+        await cancelReservationInSheets(r.confirmationId);
+        const d = new Date(r.dateTime);
+        const date = d.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+        const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        console.log(`[Cancel] Sheets-Fallback: ${r.confirmationId} storniert`);
+        return {
+          success: true,
+          cancelled_id: r.confirmationId,
+          message: `Ihre Reservierung ${r.confirmationId} (${date} um ${time} Uhr) wurde erfolgreich storniert.`,
+        };
+      }
+    } catch (err) {
+      console.error('[Cancel] Sheets-Fallback Fehler:', err.message);
+    }
     return {
       success: false,
       message: 'Ich konnte diese Reservierung leider nicht finden. Haben Sie vielleicht die genaue Buchungsnummer zur Hand? Die lautet M S T R, gefolgt von vier Ziffern.',
