@@ -5,6 +5,7 @@ const checkAvailability   = require('../functions/checkAvailability');
 const bookAppointment     = require('../functions/bookAppointment');
 const sendConfirmation    = require('../functions/sendConfirmation');
 const lookupReservation   = require('../functions/lookupReservation');
+const cancelAppointment   = require('../functions/cancelAppointment');
 const answerFAQ           = require('../functions/answerFAQ');
 const getCurrentDatetime  = require('../functions/getCurrentDatetime');
 const getRecommendations  = require('../functions/getRecommendations');
@@ -39,6 +40,10 @@ router.post('/function-call', async (req, res) => {
 
       case 'lookup_reservation':
         result = await lookupReservation(parameters, call_id, from_number);
+        break;
+
+      case 'cancel_appointment':
+        result = await cancelAppointment(parameters);
         break;
 
       case 'answer_faq':

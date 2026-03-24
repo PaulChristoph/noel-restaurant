@@ -156,6 +156,20 @@ async function createReservation(guestName, guestPhone, dateTime, guests, notes)
 }
 
 /**
+ * Storniert eine Reservierung anhand der Buchungs-ID.
+ */
+function cancelReservation(confirmationId) {
+  const reservations = loadDB();
+  const idx = reservations.findIndex(r => r.confirmationId === confirmationId.toUpperCase());
+  if (idx === -1) return false;
+  reservations[idx].status = 'cancelled';
+  reservations[idx].cancelledAt = new Date().toISOString();
+  saveDB(reservations);
+  console.log(`[Reservierung] ${confirmationId} storniert`);
+  return true;
+}
+
+/**
  * Sucht Reservierungen anhand des Gästnamens (case-insensitive, Teilstring).
  */
 function findReservationByName(name) {
@@ -182,6 +196,7 @@ function findReservationById(confirmationId) {
 module.exports = {
   checkTableAvailability,
   createReservation,
+  cancelReservation,
   findReservationByName,
   findReservationByPhone,
   findReservationById,

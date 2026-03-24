@@ -84,4 +84,35 @@ async function appendReservation(confirmationId, guestName, guestPhone, dateTime
   console.log(`[Sheets] Reservierung ${confirmationId} eingetragen`);
 }
 
-module.exports = { appendReservation };
+/**
+ * Setzt den Status einer Reservierung in Google Sheets auf "Storniert".
+ */
+async function cancelReservationInSheets(confirmationId) {
+  const auth = getAuth();
+  if (!auth) return;
+  const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
+  if (!spreadsheetId) return;
+
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  // Alle Buchungs-IDs in Spalte A suchen
+  const res = await sheets.spreadsheets.values.get({ spreadsheetId, range: 'A:A' });
+  const rows = res.data.values || [];
+  const rowIndex = rows.findIndex(r => r[0] === confirmationId.toUpperCase());
+  if (rowIndex === -1) {
+    console.log(`[Sheets] ${confirmationId} nicht gefunden`);
+    return;
+  }
+
+  // Status in Spalte H dieser Zeile überschreiben (1-basierter Index)
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: `H${rowIndex + 1}`,
+    valueInputOption: 'RAW',
+    requestBody: { values: [['Storniert ✗']] },
+  });
+
+  console.log(`[Sheets] ${confirmationId} als storniert markiert`);
+}
+
+module.exports = { appendReservation, cancelReservationInSheets };
