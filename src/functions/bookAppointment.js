@@ -1,7 +1,7 @@
 const { createReservation }           = require('../services/mockCalendar');
 const { sendReservationConfirmation } = require('../services/sms');
 const { sendRestaurantNotification }  = require('../services/email');
-const { appendReservation }           = require('../services/googleSheets');
+const { appendReservation }           = require('../services/airtable');
 const { getCallerPhone }              = require('../services/retellCall');
 
 async function bookAppointment({ guest_name, guest_phone, date_time, guests, notes }, callId, fromNumber) {
@@ -34,11 +34,11 @@ async function bookAppointment({ guest_name, guest_phone, date_time, guests, not
   sendRestaurantNotification(guest_name, phone, startTime, guests, confirmationId)
     .catch(err => console.error('[Email] Fehler:', err.message));
 
-  // Google Sheets Eintrag — AWAITED damit Cancel-Fallback die Buchung sofort findet
+  // Airtable Eintrag — AWAITED damit Cancel-Fallback die Buchung sofort findet
   try {
     await appendReservation(confirmationId, guest_name, phone, startTime, guests);
   } catch (err) {
-    console.error('[Sheets] Eintrag fehlgeschlagen:', err.message);
+    console.error('[Airtable] Eintrag fehlgeschlagen:', err.message);
     // Buchung trotzdem bestätigen
   }
 

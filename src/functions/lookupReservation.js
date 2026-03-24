@@ -4,7 +4,7 @@ const {
   findReservationById,
 } = require('../services/mockCalendar');
 const { getCallerPhone } = require('../services/retellCall');
-const { findReservationsInSheets } = require('../services/googleSheets');
+const { findReservationsInAirtable } = require('../services/airtable');
 
 /**
  * Sucht eine bestehende Reservierung — per Name, Buchungs-ID oder Anrufernummer.
@@ -31,18 +31,18 @@ async function lookupReservation({ guest_name, confirmation_id }, callId, fromNu
     }
   }
 
-  // 4. Fallback: Google Sheets (JSON nach Railway-Redeploy leer)
+  // 4. Fallback: Airtable (JSON nach Railway-Redeploy leer)
   if (results.length === 0) {
     try {
-      const callerPhoneForSheets = fromNumber || (callId ? await getCallerPhone(callId) : null);
-      const sheetsResults = await findReservationsInSheets({
+      const callerPhoneForAirtable = fromNumber || (callId ? await getCallerPhone(callId) : null);
+      const airtableResults = await findReservationsInAirtable({
         confirmationId: confirmation_id,
         guestName: guest_name,
-        phone: callerPhoneForSheets,
+        phone: callerPhoneForAirtable,
       });
-      if (sheetsResults.length > 0) results = sheetsResults;
+      if (airtableResults.length > 0) results = airtableResults;
     } catch (err) {
-      console.error('[Lookup] Sheets-Fallback Fehler:', err.message);
+      console.error('[Lookup] Airtable-Fallback Fehler:', err.message);
     }
   }
 

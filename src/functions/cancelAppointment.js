@@ -1,5 +1,5 @@
 const { cancelReservation, findReservationById, findReservationByName, findReservationByPhone } = require('../services/mockCalendar');
-const { cancelReservationInSheets, findReservationsInSheets } = require('../services/googleSheets');
+const { cancelReservationInAirtable, findReservationsInAirtable } = require('../services/airtable');
 const { getCallerPhone } = require('../services/retellCall');
 
 /**
@@ -41,14 +41,14 @@ async function cancelAppointment({ confirmation_id, guest_name }, callId, fromNu
       try {
         const callerPhone = fromNumber || (callId ? await getCallerPhone(callId) : null);
         console.log(`[Cancel] Sheets-Fallback: ID="${confirmation_id}" Name="${guest_name}" Phone="${callerPhone}"`);
-        const sheetsResults = await findReservationsInSheets({
+        const sheetsResults = await findReservationsInAirtable({
           confirmationId: confirmation_id,
           guestName: guest_name,
           phone: callerPhone,
         });
         if (sheetsResults.length > 0) {
           const r = sheetsResults[0];
-          await cancelReservationInSheets(r.confirmationId);
+          await cancelReservationInAirtable(r.confirmationId);
           const d = new Date(r.dateTime);
           const date = d.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
           const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
@@ -82,9 +82,9 @@ async function cancelAppointment({ confirmation_id, guest_name }, callId, fromNu
       return { success: false, message: 'Stornierung leider nicht möglich. Bitte rufen Sie uns direkt an.' };
     }
 
-    // Google Sheets aktualisieren (fire & forget)
-    cancelReservationInSheets(reservation.confirmationId)
-      .catch(err => console.error('[Sheets] Storno-Fehler:', err.message));
+    // Airtable aktualisieren (fire & forget)
+    cancelReservationInAirtable(reservation.confirmationId)
+      .catch(err => console.error('[Airtable] Storno-Fehler:', err.message));
 
     const d = new Date(reservation.dateTime);
     const date = d.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
