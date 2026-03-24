@@ -8,7 +8,7 @@ const { getCallerPhone } = require('../services/retellCall');
 /**
  * Sucht eine bestehende Reservierung — per Name, Buchungs-ID oder Anrufernummer.
  */
-async function lookupReservation({ guest_name, confirmation_id }, callId) {
+async function lookupReservation({ guest_name, confirmation_id }, callId, fromNumber) {
   let results = [];
 
   // 1. Per Buchungs-ID suchen (präziseste Suche)
@@ -22,9 +22,9 @@ async function lookupReservation({ guest_name, confirmation_id }, callId) {
     results = findReservationByName(guest_name);
   }
 
-  // 3. Automatisch per Anrufernummer suchen (falls keine anderen Treffer)
-  if (results.length === 0 && callId) {
-    const callerPhone = await getCallerPhone(callId);
+  // 3. Automatisch per Anrufernummer suchen (direkt aus Retell-Body, dann API-Fallback)
+  if (results.length === 0) {
+    const callerPhone = fromNumber || (callId ? await getCallerPhone(callId) : null);
     if (callerPhone) {
       results = findReservationByPhone(callerPhone);
     }

@@ -4,16 +4,18 @@ const { sendRestaurantNotification }  = require('../services/email');
 const { appendReservation }           = require('../services/googleSheets');
 const { getCallerPhone }              = require('../services/retellCall');
 
-async function bookAppointment({ guest_name, guest_phone, date_time, guests, notes }, callId) {
+async function bookAppointment({ guest_name, guest_phone, date_time, guests, notes }, callId, fromNumber) {
   if (!guest_name || !date_time || !guests) {
     return { success: false, error: 'Bitte nennen Sie Ihren Namen, die Personenzahl sowie Datum und Uhrzeit.' };
   }
 
-  // Telefonnummer: genannt oder automatisch aus Anruf
-  let phone = guest_phone;
-  if (!phone && callId) {
+  // Telefonnummer: 1) vom Gast genannt, 2) direkt aus Retell-Body, 3) API-Fallback
+  let phone = guest_phone || fromNumber;
+  if (phone) {
+    console.log(`[Booking] Telefonnummer: ${phone}`);
+  } else if (callId) {
     phone = await getCallerPhone(callId);
-    if (phone) console.log(`[Booking] Anrufernummer automatisch erkannt: ${phone}`);
+    if (phone) console.log(`[Booking] Anrufernummer via API erkannt: ${phone}`);
   }
 
   const { id, confirmationId, startTime } = await createReservation(

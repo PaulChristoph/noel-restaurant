@@ -14,11 +14,12 @@ const getRecommendations  = require('../functions/getRecommendations');
  * Retell AI ruft diesen Endpoint auf wenn Sofia eine Funktion ausführen soll.
  */
 router.post('/function-call', async (req, res) => {
-  const name       = req.body.name || req.body.function_name;
-  const parameters = req.body.args || req.body.parameters || {};
-  const call_id    = req.body.call?.call_id || req.body.call_id;
+  const name        = req.body.name || req.body.function_name;
+  const parameters  = req.body.args || req.body.parameters || {};
+  const call_id     = req.body.call?.call_id || req.body.call_id;
+  const from_number = req.body.call?.from_number || null;
 
-  console.log(`[Retell] Funktion: ${name} | Call: ${call_id}`);
+  console.log(`[Retell] Funktion: ${name} | Call: ${call_id} | Von: ${from_number || 'unbekannt'}`);
 
   try {
     let result;
@@ -29,7 +30,7 @@ router.post('/function-call', async (req, res) => {
         break;
 
       case 'book_appointment':
-        result = await bookAppointment(parameters, call_id);
+        result = await bookAppointment(parameters, call_id, from_number);
         break;
 
       case 'send_confirmation':
@@ -37,7 +38,7 @@ router.post('/function-call', async (req, res) => {
         break;
 
       case 'lookup_reservation':
-        result = await lookupReservation(parameters, call_id);
+        result = await lookupReservation(parameters, call_id, from_number);
         break;
 
       case 'answer_faq':
