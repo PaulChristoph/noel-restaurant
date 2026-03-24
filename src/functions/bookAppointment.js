@@ -28,12 +28,6 @@ async function bookAppointment({ guest_name, guest_phone, date_time, guests, not
   const dateFormatted = d.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const timeFormatted = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 
-  // SMS-Bestätigung an Gast (fire & forget)
-  if (phone) {
-    sendReservationConfirmation(phone, guest_name, startTime, guests, confirmationId)
-      .catch(err => console.error('[SMS] Fehler:', err.message));
-  }
-
   // Email-Benachrichtigung ans Restaurant (fire & forget)
   sendRestaurantNotification(guest_name, phone, startTime, guests, confirmationId)
     .catch(err => console.error('[Email] Fehler:', err.message));
@@ -49,7 +43,11 @@ async function bookAppointment({ guest_name, guest_phone, date_time, guests, not
   return {
     success: true,
     confirmation_id: confirmationId,
-    confirmation_message: `Perfekt! Ihr Tisch ist reserviert. ${guests} ${guests === 1 ? 'Person' : 'Personen'} am ${dateFormatted} um ${timeFormatted} Uhr.${phone ? ' Sie erhalten gleich eine Bestätigungs-SMS mit allen Details.' : ` Ihre Buchungsnummer lautet ${prefix}, ${numbers}.`} Wir freuen uns auf Ihren Besuch!`,
+    detected_phone: phone || null,
+    guest_name,
+    date_time: startTime,
+    guests,
+    confirmation_message: `Perfekt! Ihr Tisch ist reserviert. ${guests} ${guests === 1 ? 'Person' : 'Personen'} am ${dateFormatted} um ${timeFormatted} Uhr. Ihre Buchungsnummer lautet ${prefix}, ${numbers}.`,
   };
 }
 

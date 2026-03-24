@@ -20,10 +20,11 @@ async function sendReservationConfirmation(guestPhone, guestName, dateTime, gues
   const d = new Date(dateTime);
   const date = d.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-  const name = process.env.RESTAURANT_NAME || 'NOEL';
-  const phone = process.env.RESTAURANT_PHONE || '04105-6763302';
+  const name    = process.env.RESTAURANT_NAME    || 'Restaurant Mustermann';
+  const phone   = process.env.RESTAURANT_PHONE   || '04105 676 33 02';
+  const website = process.env.RESTAURANT_WEBSITE || 'restaurant-mustermann.de';
 
-  const body = `Hallo ${guestName.split(' ')[0]}, Ihre Reservierung (${guests} Personen) am ${date} um ${time} Uhr im ${name} ist bestätigt. Buchungs-Nr.: ${confirmationId}. Bei Fragen: ${phone}`;
+  const body = `Vielen Dank für Ihre Buchung im ${name}! Ihre Reservierung: ${guests} ${guests === 1 ? 'Person' : 'Personen'} am ${date} um ${time} Uhr. Buchungs-Nr.: ${confirmationId}. Bei Fragen rufen Sie uns unter ${phone} an oder besuchen Sie ${website}`;
 
   return sendSMS(guestPhone, body);
 }

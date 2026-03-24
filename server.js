@@ -33,6 +33,6 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`[Server] NOEL Restaurant KI läuft auf Port ${PORT}`);
-  console.log(`[Server] Restaurant: ${process.env.RESTAURANT_NAME || 'NOEL Fleestedt'}`);
+  console.log(`[Server] KI-Telefonassistent läuft auf Port ${PORT}`);
+  console.log(`[Server] Restaurant: ${process.env.RESTAURANT_NAME || 'Restaurant Mustermann'}`);
 });
