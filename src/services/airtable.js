@@ -65,8 +65,7 @@ async function appendReservation(confirmationId, guestName, guestPhone, dateTime
   }
 
   const d        = new Date(dateTime);
-  const datePart = d.toISOString().split('T')[0];                          // "2025-03-24"
-  const timePart = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); // "18:00"
+  const datePart = d.toISOString().split('T')[0]; // "2025-03-24"
 
   const body = JSON.stringify({
     fields: {
@@ -75,7 +74,6 @@ async function appendReservation(confirmationId, guestName, guestPhone, dateTime
       'Telefon':            guestPhone || '',
       'DateTime':           dateTime,
       'Reservation Date':   datePart,
-      'Time':               timePart,
       'Number of Guests':   parseInt(guests) || 1,
       'Status':             'Confirmed',
     },
