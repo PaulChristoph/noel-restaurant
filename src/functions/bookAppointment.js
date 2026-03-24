@@ -34,9 +34,13 @@ async function bookAppointment({ guest_name, guest_phone, date_time, guests, not
   sendRestaurantNotification(guest_name, phone, startTime, guests, confirmationId)
     .catch(err => console.error('[Email] Fehler:', err.message));
 
-  // Google Sheets Eintrag (fire & forget)
-  appendReservation(confirmationId, guest_name, phone, startTime, guests)
-    .catch(err => console.error('[Sheets] Fehler:', err.message));
+  // Google Sheets Eintrag — AWAITED damit Cancel-Fallback die Buchung sofort findet
+  try {
+    await appendReservation(confirmationId, guest_name, phone, startTime, guests);
+  } catch (err) {
+    console.error('[Sheets] Eintrag fehlgeschlagen:', err.message);
+    // Buchung trotzdem bestätigen
+  }
 
   // TTS-freundliche Buchungsnummer: "MSTR-1234" → "M S T R, 1 2 3 4"
   const prefix  = confirmationId.split('-')[0].split('').join(' ');

@@ -88,6 +88,7 @@ async function appendReservation(confirmationId, guestName, guestPhone, dateTime
  * Setzt den Status einer Reservierung in Google Sheets auf "Storniert".
  */
 async function cancelReservationInSheets(confirmationId) {
+  if (!confirmationId) return;
   const auth = getAuth();
   if (!auth) return;
   const spreadsheetId = process.env.GOOGLE_SHEETS_ID;

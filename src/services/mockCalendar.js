@@ -21,7 +21,12 @@ function loadDB() {
   if (!fs.existsSync(DB_FILE)) {
     fs.writeFileSync(DB_FILE, JSON.stringify([], null, 2));
   }
-  return JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
+  try {
+    return JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
+  } catch (err) {
+    console.error('[DB] JSON-Lesefehler, leere DB zurückgegeben:', err.message);
+    return [];
+  }
 }
 
 function saveDB(reservations) {
@@ -192,6 +197,7 @@ function findReservationByPhone(phone) {
  * Sucht eine Reservierung anhand der Buchungs-ID (z.B. "MSTR-4821").
  */
 function findReservationById(confirmationId) {
+  if (!confirmationId) return null;
   return loadDB().find(r => r.confirmationId === confirmationId.toUpperCase()) || null;
 }
 
