@@ -159,6 +159,7 @@ async function createReservation(guestName, guestPhone, dateTime, guests, notes)
  * Storniert eine Reservierung anhand der Buchungs-ID.
  */
 function cancelReservation(confirmationId) {
+  if (!confirmationId) return false;
   const reservations = loadDB();
   const idx = reservations.findIndex(r => r.confirmationId === confirmationId.toUpperCase());
   if (idx === -1) return false;
@@ -173,6 +174,7 @@ function cancelReservation(confirmationId) {
  * Sucht Reservierungen anhand des Gästnamens (case-insensitive, Teilstring).
  */
 function findReservationByName(name) {
+  if (!name) return [];
   const q = name.toLowerCase().trim();
   return loadDB().filter(r => r.guestName.toLowerCase().includes(q));
 }

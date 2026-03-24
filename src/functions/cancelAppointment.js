@@ -22,7 +22,7 @@ async function cancelAppointment({ confirmation_id, guest_name }) {
   if (!reservation) {
     return {
       success: false,
-      message: 'Ich konnte keine aktive Reservierung finden. Haben Sie vielleicht die Buchungsnummer zur Hand?',
+      message: 'Ich konnte diese Reservierung leider nicht finden. Haben Sie vielleicht die genaue Buchungsnummer zur Hand? Die lautet M S T R, gefolgt von vier Ziffern.',
     };
   }
 
