@@ -18,8 +18,14 @@ router.post('/function-call', async (req, res) => {
   const name        = req.body.name || req.body.function_name;
   const parameters  = req.body.args || req.body.parameters || {};
   const call_id     = req.body.call?.call_id || req.body.call_id;
-  const from_number = req.body.call?.from_number || null;
+  const from_number = req.body.call?.from_number || req.body.call?.caller_number || null;
 
+  // Debug: zeigt exakt was Retell schickt (nur Felder aus call-Objekt)
+  if (req.body.call) {
+    const callKeys = Object.keys(req.body.call).join(', ');
+    console.log(`[Retell] Call-Felder: ${callKeys}`);
+    console.log(`[Retell] from_number raw: ${req.body.call.from_number} | caller_number raw: ${req.body.call.caller_number}`);
+  }
   console.log(`[Retell] Funktion: ${name} | Call: ${call_id} | Von: ${from_number || 'unbekannt'}`);
 
   try {

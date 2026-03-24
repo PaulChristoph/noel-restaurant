@@ -55,6 +55,10 @@ async function lookupReservation({ guest_name, confirmation_id }, callId, fromNu
     return {
       found: true,
       count: 1,
+      confirmation_id: sorted[0].confirmationId,
+      guest_name: sorted[0].guestName,
+      date_time: sorted[0].dateTime,
+      guests: sorted[0].guests,
       message: `Ich habe folgende Reservierung gefunden: ${formatted[0]}.`,
     };
   }
@@ -62,6 +66,10 @@ async function lookupReservation({ guest_name, confirmation_id }, callId, fromNu
   return {
     found: true,
     count: formatted.length,
+    confirmation_id: sorted[0].confirmationId,
+    guest_name: sorted[0].guestName,
+    date_time: sorted[0].dateTime,
+    guests: sorted[0].guests,
     message: `Ich habe ${formatted.length} Reservierungen gefunden: ${formatted.join('. Außerdem: ')}.`,
   };
 }
