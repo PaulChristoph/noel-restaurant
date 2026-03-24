@@ -133,7 +133,7 @@ async function checkTableAvailability(date, time) {
 async function createReservation(guestName, guestPhone, dateTime, guests, notes) {
   const reservations = loadDB();
   const id = `res-${Date.now()}`;
-  const confirmationId = `NOEL-${Math.floor(1000 + Math.random() * 9000)}`;
+  const confirmationId = `MSTR-${Math.floor(1000 + Math.random() * 9000)}`;
   const reviewToken = crypto.randomBytes(12).toString('hex');
 
   reservations.push({

@@ -1,6 +1,8 @@
-const { createReservation } = require('../services/mockCalendar');
+const { createReservation }           = require('../services/mockCalendar');
 const { sendReservationConfirmation } = require('../services/sms');
-const { getCallerPhone } = require('../services/retellCall');
+const { sendRestaurantNotification }  = require('../services/email');
+const { appendReservation }           = require('../services/googleSheets');
+const { getCallerPhone }              = require('../services/retellCall');
 
 async function bookAppointment({ guest_name, guest_phone, date_time, guests, notes }, callId) {
   if (!guest_name || !date_time || !guests) {
@@ -26,19 +28,28 @@ async function bookAppointment({ guest_name, guest_phone, date_time, guests, not
   const dateFormatted = d.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const timeFormatted = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 
-  // Bestätigungs-SMS (fire & forget)
+  // SMS-Bestätigung an Gast (fire & forget)
   if (phone) {
     sendReservationConfirmation(phone, guest_name, startTime, guests, confirmationId)
       .catch(err => console.error('[SMS] Fehler:', err.message));
   }
 
-  // TTS-freundliche Nummer: "NOEL-1234" → "N O E L, 1 2 3 4"
-  const idSpoken = confirmationId.replace('NOEL-', '').split('').join(' ');
+  // Email-Benachrichtigung ans Restaurant (fire & forget)
+  sendRestaurantNotification(guest_name, phone, startTime, guests, confirmationId)
+    .catch(err => console.error('[Email] Fehler:', err.message));
+
+  // Google Sheets Eintrag (fire & forget)
+  appendReservation(confirmationId, guest_name, phone, startTime, guests)
+    .catch(err => console.error('[Sheets] Fehler:', err.message));
+
+  // TTS-freundliche Buchungsnummer: "MSTR-1234" → "M S T R, 1 2 3 4"
+  const prefix  = confirmationId.split('-')[0].split('').join(' ');
+  const numbers = confirmationId.split('-')[1].split('').join(' ');
 
   return {
     success: true,
     confirmation_id: confirmationId,
-    confirmation_message: `Perfekt! Ihr Tisch ist reserviert. ${guests} ${guests === 1 ? 'Person' : 'Personen'} am ${dateFormatted} um ${timeFormatted} Uhr.${phone ? ' Sie erhalten gleich eine Bestätigungs-SMS mit allen Details.' : ` Ihre Buchungsnummer lautet N O E L ${idSpoken}.`} Wir freuen uns auf Ihren Besuch!`,
+    confirmation_message: `Perfekt! Ihr Tisch ist reserviert. ${guests} ${guests === 1 ? 'Person' : 'Personen'} am ${dateFormatted} um ${timeFormatted} Uhr.${phone ? ' Sie erhalten gleich eine Bestätigungs-SMS mit allen Details.' : ` Ihre Buchungsnummer lautet ${prefix}, ${numbers}.`} Wir freuen uns auf Ihren Besuch!`,
   };
 }
 
