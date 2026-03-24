@@ -9,6 +9,23 @@ const cancelAppointment   = require('../functions/cancelAppointment');
 const answerFAQ           = require('../functions/answerFAQ');
 const getCurrentDatetime  = require('../functions/getCurrentDatetime');
 const getRecommendations  = require('../functions/getRecommendations');
+const { findReservationsInSheets } = require('../services/googleSheets');
+
+/**
+ * GET /retell/debug-sheets?id=MSTR-1133
+ * Direkter Sheets-Test ohne KI-Umweg.
+ */
+router.get('/debug-sheets', async (req, res) => {
+  const id = req.query.id || '';
+  try {
+    const results = await findReservationsInSheets({ confirmationId: id });
+    const sheetsId = process.env.GOOGLE_SHEETS_ID || 'NICHT GESETZT';
+    const hasAuth = !!(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY);
+    return res.json({ sheetsId, hasAuth, searchId: id, results });
+  } catch (err) {
+    return res.json({ error: err.message });
+  }
+});
 
 /**
  * POST /retell/function-call
