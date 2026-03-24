@@ -1,27 +1,29 @@
 const express = require('express');
 const router = express.Router();
 
-const checkAvailability   = require('../functions/checkAvailability');
-const bookAppointment     = require('../functions/bookAppointment');
-const sendConfirmation    = require('../functions/sendConfirmation');
-const lookupReservation   = require('../functions/lookupReservation');
-const cancelAppointment   = require('../functions/cancelAppointment');
-const answerFAQ           = require('../functions/answerFAQ');
-const getCurrentDatetime  = require('../functions/getCurrentDatetime');
-const getRecommendations  = require('../functions/getRecommendations');
-const { findReservationsInSheets } = require('../services/googleSheets');
+const checkAvailability      = require('../functions/checkAvailability');
+const bookAppointment        = require('../functions/bookAppointment');
+const sendConfirmation       = require('../functions/sendConfirmation');
+const lookupReservation      = require('../functions/lookupReservation');
+const cancelAppointment      = require('../functions/cancelAppointment');
+const rescheduleAppointment  = require('../functions/rescheduleAppointment');
+const answerFAQ              = require('../functions/answerFAQ');
+const getCurrentDatetime     = require('../functions/getCurrentDatetime');
+const getRecommendations     = require('../functions/getRecommendations');
+const { findReservationsInAirtable } = require('../services/airtable');
 
 /**
- * GET /retell/debug-sheets?id=MSTR-1133
- * Direkter Sheets-Test ohne KI-Umweg.
+ * GET /retell/debug-airtable?id=MSTR-1133
+ * Direkter Airtable-Test.
  */
-router.get('/debug-sheets', async (req, res) => {
+router.get('/debug-airtable', async (req, res) => {
   const id = req.query.id || '';
   try {
-    const results = await findReservationsInSheets({ confirmationId: id });
-    const sheetsId = process.env.GOOGLE_SHEETS_ID || 'NICHT GESETZT';
-    const hasAuth = !!(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY);
-    return res.json({ sheetsId, hasAuth, searchId: id, results });
+    const results = await findReservationsInAirtable({ confirmationId: id });
+    const baseId  = process.env.AIRTABLE_BASE_ID  || 'NICHT GESETZT';
+    const tableId = process.env.AIRTABLE_TABLE_ID || 'NICHT GESETZT';
+    const hasAuth = !!process.env.AIRTABLE_API_KEY;
+    return res.json({ baseId, tableId, hasAuth, searchId: id, results });
   } catch (err) {
     return res.json({ error: err.message });
   }
@@ -37,11 +39,10 @@ router.post('/function-call', async (req, res) => {
   const call_id     = req.body.call?.call_id || req.body.call_id;
   const from_number = req.body.call?.from_number || req.body.call?.caller_number || null;
 
-  // Debug: zeigt exakt was Retell schickt (nur Felder aus call-Objekt)
   if (req.body.call) {
     const callKeys = Object.keys(req.body.call).join(', ');
     console.log(`[Retell] Call-Felder: ${callKeys}`);
-    console.log(`[Retell] from_number raw: ${req.body.call.from_number} | caller_number raw: ${req.body.call.caller_number}`);
+    console.log(`[Retell] from_number: ${req.body.call.from_number} | caller_number: ${req.body.call.caller_number}`);
   }
   console.log(`[Retell] Funktion: ${name} | Call: ${call_id} | Von: ${from_number || 'unbekannt'}`);
 
@@ -67,6 +68,10 @@ router.post('/function-call', async (req, res) => {
 
       case 'cancel_appointment':
         result = await cancelAppointment(parameters, call_id, from_number);
+        break;
+
+      case 'reschedule_appointment':
+        result = await rescheduleAppointment(parameters, call_id, from_number);
         break;
 
       case 'answer_faq':

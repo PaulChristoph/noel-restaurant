@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { findReservationsInSheets } = require('../services/googleSheets');
+const { findReservationsInAirtable } = require('../services/airtable');
 
 router.get('/', (req, res) => {
   res.json({
@@ -11,19 +11,19 @@ router.get('/', (req, res) => {
 });
 
 /**
- * GET /health/sheets?id=MSTR-1133&name=Paul
- * Direkter Sheets-Test: prüft Credentials und Lookup.
+ * GET /health/airtable?id=MSTR-1133&name=Paul
+ * Direkter Airtable-Test: prüft Credentials und Lookup.
  */
-router.get('/sheets', async (req, res) => {
+router.get('/airtable', async (req, res) => {
   const { id, name } = req.query;
-  const hasEmail = !!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const hasKey   = !!process.env.GOOGLE_PRIVATE_KEY;
-  const sheetsId = process.env.GOOGLE_SHEETS_ID || null;
+  const hasKey  = !!process.env.AIRTABLE_API_KEY;
+  const baseId  = process.env.AIRTABLE_BASE_ID  || null;
+  const tableId = process.env.AIRTABLE_TABLE_ID || null;
   try {
-    const results = await findReservationsInSheets({ confirmationId: id, guestName: name });
-    return res.json({ hasEmail, hasKey, sheetsId, query: { id, name }, results });
+    const results = await findReservationsInAirtable({ confirmationId: id, guestName: name });
+    return res.json({ hasKey, baseId, tableId, query: { id, name }, results });
   } catch (err) {
-    return res.json({ hasEmail, hasKey, sheetsId, error: err.message });
+    return res.json({ hasKey, baseId, tableId, error: err.message });
   }
 });
 

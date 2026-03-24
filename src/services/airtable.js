@@ -174,4 +174,45 @@ async function findReservationsInAirtable({ confirmationId, guestName, phone } =
   return results;
 }
 
-module.exports = { appendReservation, cancelReservationInAirtable, findReservationsInAirtable };
+/**
+ * Aktualisiert Datum/Uhrzeit einer bestehenden Reservierung.
+ */
+async function updateReservation(confirmationId, newDateTime) {
+  if (!confirmationId) return;
+  const headers = getHeaders();
+  const url     = getTableUrl();
+  if (!headers || !url) return;
+
+  const records = await getAllRecords();
+  const norm    = normalizeId(confirmationId);
+  const record  = records.find(r => normalizeId(r.fields['Buchungs-ID']) === norm);
+
+  if (!record) {
+    console.log(`[Airtable] updateReservation: ${confirmationId} nicht gefunden`);
+    return;
+  }
+
+  const d        = new Date(newDateTime);
+  const datePart = d.toISOString().split('T')[0];
+
+  const res = await fetch(`${url}/${record.id}`, {
+    method:  'PATCH',
+    headers,
+    body:    JSON.stringify({
+      fields: {
+        'DateTime':         newDateTime,
+        'Reservation Date': datePart,
+        'Status':           'Confirmed',
+      },
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Airtable PATCH update: ${res.status} ${text}`);
+  }
+
+  console.log(`[Airtable] ✓ ${confirmationId} auf ${newDateTime} umgebucht`);
+}
+
+module.exports = { appendReservation, cancelReservationInAirtable, findReservationsInAirtable, updateReservation };
