@@ -178,7 +178,7 @@ async function handleConfirm(session, text, from) {
         `📅 ${dateStr} · ${d.time} Uhr\n` +
         `👤 ${d.name} · ${d.guests} ${d.guests === 1 ? 'Person' : 'Personen'}\n\n` +
         `Sie erhalten in Kürze eine SMS-Bestätigung.\n\n` +
-        `Wir freuen uns auf Sie! 🍽\n_Restaurant Mustermann_\n\n` +
+        `Wir freuen uns auf Sie! 🍽\n_NOEL restaurant·bar·hotel_\n\n` +
         `_(Schreiben Sie *neu* für eine weitere Reservierung)_`;
     } else {
       return `❌ Leider ist ein Fehler aufgetreten: ${result.error}\nBitte versuchen Sie es erneut oder rufen Sie uns an.`;
@@ -188,7 +188,7 @@ async function handleConfirm(session, text, from) {
     session.state = STATES.DONE;
     // Fallback-Buchungsnummer bei technischem Fehler
     const fallbackId = 'MSTR-' + Math.floor(1000 + Math.random() * 9000);
-    return `✅ *Buchung eingegangen!*\n\nBuchungsnummer: *${fallbackId}*\n\nWir werden Sie in Kürze per SMS bestätigen. Bei Fragen: *040 – 123 45 67*\n\n_Restaurant Mustermann_`;
+    return `✅ *Buchung eingegangen!*\n\nBuchungsnummer: *${fallbackId}*\n\nWir werden Sie in Kürze per SMS bestätigen. Bei Fragen rufen Sie uns an.\n\n_NOEL restaurant·bar·hotel_`;
   }
 }
 
@@ -300,7 +300,7 @@ function parseTime(text) {
 
 const MSG = {
   greeting: () =>
-    `Willkommen bei *Restaurant Mustermann*! 🍽\n\n` +
+    `Willkommen bei *NOEL restaurant·bar·hotel*! 🍽\n\n` +
     `Ich bin Ihr digitaler Reservierungsassistent und helfe Ihnen gerne, einen Tisch zu buchen.\n\n` +
     `Für wie viele *Personen* möchten Sie reservieren?`,
 
