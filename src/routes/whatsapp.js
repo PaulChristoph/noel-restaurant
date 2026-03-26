@@ -5,6 +5,15 @@ const router = require('express').Router();
 const twilio = require('twilio');
 const { processMessage } = require('../services/whatsappSession');
 
+// Inbound SMS — loggt alle eingehenden SMS (z.B. Verification Codes)
+router.post('/sms-in', (req, res) => {
+  const params = new URLSearchParams(req.rawBody || '');
+  const from = params.get('From') || '';
+  const body = params.get('Body') || '';
+  console.log(`[SMS-IN] Von: ${from} | Nachricht: ${body}`);
+  res.type('text/xml').send('<Response></Response>');
+});
+
 router.post('/incoming', async (req, res) => {
   // server.js setzt req.rawBody (x-www-form-urlencoded von Twilio)
   const params = new URLSearchParams(req.rawBody || '');
