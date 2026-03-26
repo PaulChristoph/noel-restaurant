@@ -55,6 +55,11 @@ app.get('/verify/:id', async (req, res) => {
   }
 });
 
+// Debug: zeigt welche Routen registriert sind
+app.get('/debug/routes', (req, res) => {
+  res.json({ version: '2.1.0-whatsapp', routes: ['retell','health','api','whatsapp','verify'] });
+});
+
 // 404
 app.use((req, res) => res.status(404).json({ error: 'Nicht gefunden' }));
 
